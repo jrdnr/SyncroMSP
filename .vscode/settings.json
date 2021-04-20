@@ -1,0 +1,7 @@
+{
+    "git.autofetch": true,
+    "files.eol": "\r\n",
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.trimTrailingWhitespace": true
+}
