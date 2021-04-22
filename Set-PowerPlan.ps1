@@ -1,20 +1,20 @@
 <#
 .SYNOPSIS
-Simple script to set PowerPlan
+    Simple script to set PowerPlan
 
 .DESCRIPTION
-This Script uses pre-defined Microsoft Guids (https://docs.microsoft.com/en-us/windows/win32/power/power-policy-settings)
-to set the power plan to High performance, Balanced, or Power saver
+    This Script uses pre-defined Microsoft Guids (https://docs.microsoft.com/en-us/windows/win32/power/power-policy-settings)
+    to set the power plan to High performance, Balanced, or Power saver
 
 .PARAMETER PowerPlan
-Parameter PowerPlan should be set up as a Syncro Runtime Variable
-Variable Name: PowerPlan
-Variable Type: dropdown
-Values: High performance, Balanced, Power saver
+    Parameter PowerPlan should be set up as a Syncro Runtime Variable
+    Variable Name: PowerPlan
+    Variable Type: dropdown
+    Values: High performance, Balanced, Power saver
 
 
 .EXAMPLE
-Set-PowerPlan -PowerPlan Balanced
+    Set-PowerPlan -PowerPlan Balanced
 #>
 function Set-PowerPlan ($PowerPlan) {
     switch ($PowerPlan) {
