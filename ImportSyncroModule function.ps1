@@ -1,8 +1,7 @@
-Import-SyncroModule.ps1
 # Set the TLS version used by the PowerShell client to TLS 1.2.
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-# Just improt the module if $env vars are set
+# Just import the module if $env vars are set
 if ($env:SyncroModule){
     Import-Module $env:SyncroModule -WarningAction SilentlyContinue
 } else {
