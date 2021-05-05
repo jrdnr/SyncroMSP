@@ -32,9 +32,11 @@ Get-ChildItem -Path $paths -Filter $files_filter | ForEach-Object {
     If (test-path $filePath) {
         try {
             Remove-Item $filePath -Force -Verbose -ErrorAction Stop
-            Log-Activity -Message "Removed $filePath" -EventName PowershellScript
+            "Removed $filePath"
+            Log-Activity -Message "Removed $filePath" -EventName 'PowershellScript' -ErrorAction SilentlyContinue
         }
         catch {
+            "Could not remove $filePath. Remove Manually"
             Rmm-Alert -Category Script_Error -Body "Could not remove $filePath. Remove Manually"
         }
     } else {
