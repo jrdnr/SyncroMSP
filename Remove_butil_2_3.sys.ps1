@@ -27,19 +27,22 @@ $paths = @("C:\Windows\Temp")
     Join-Path -Path $_.FullName -ChildPath $child_path
 }
 
-Get-ChildItem -Path $paths -Filter $files_filter | ForEach-Object {
+"Paths to scan for dangerous files"
+$paths
+
+Get-ChildItem -Path $paths -Filter $files_filter -OutVariable f | ForEach-Object {
     $filePath = $_.FullName
-    If (test-path $filePath) {
-        try {
-            Remove-Item $filePath -Force -Verbose -ErrorAction Stop
-            "Removed $filePath"
-            Log-Activity -Message "Removed $filePath" -EventName 'PowershellScript' -ErrorAction SilentlyContinue
-        }
-        catch {
-            "Could not remove $filePath. Remove Manually"
-            Rmm-Alert -Category Script_Error -Body "Could not remove $filePath. Remove Manually"
-        }
-    } else {
-        "NO File `"$filePath`""
+    "Cleaning $filePath"
+    try {
+        Remove-Item $filePath -Force -Verbose -ErrorAction Stop
+        "Removed $filePath"
+        Log-Activity -Message "Removed $filePath" -EventName 'PowershellScript' -ErrorAction SilentlyContinue
+    }
+    catch {
+        "Could not remove $filePath. Remove Manually"
+        Rmm-Alert -Category Script_Error -Body "Could not remove $filePath. Remove Manually"
+        exit 1
     }
 }
+
+if ($null -eq $f -or $f.count -eq 0){"Scan Successful: $files_filter, was not found on this system"}
