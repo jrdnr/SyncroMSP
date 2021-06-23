@@ -1,4 +1,15 @@
-$UpdateTime = (Get-Date).ToUniversalTime().AddMinutes(5).ToString("yyyy-MM-ddTH:mm:ss.0000000Z")
+<#
+Forces the Syncro agent to perform a Full Sync.
+
+Take note that this script will restart the Syncro service. This is done on a delay so the script is reported as successful on the dashboard.
+
+The script also adds an Activity Log on the asset if the full sync was successful.
+
+USE AT YOUR OWN RISK.
+credit: https://pastebin.com/6SR9r9VR?fbclid=IwAR0hS06OnsJnegceWUhN9iL0HDH28tVnq0aaoouNcB-r3jHFTuw8zYW-Um4
+#>
+
+$UpdateTime = (Get-Date).ToUniversalTime().AddMinutes(5).ToString("yyyy-MM-ddTHH:mm:ss.0000000Z")
 #Update Syncro last_sync registry value
 Set-ItemProperty -Path "HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro" -Name "last_sync" -Value "$UpdateTime"
 
