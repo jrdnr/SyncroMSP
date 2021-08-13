@@ -19,3 +19,6 @@ if ($env:SyncroModule){
         'Could not find Syncro Module info'
     }
 }
+
+"Available Commands:"
+Get-Command -Module module
