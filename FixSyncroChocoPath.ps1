@@ -9,6 +9,12 @@
 #>
 $ChocoPath  = 'C:\Program Files\RepairTech\Syncro\kabuto_app_manager\choco.exe'
 $KpmPath    = 'C:\Program Files\RepairTech\Syncro\kabuto_app_manager\kabuto_patch_manager.exe'
-if(!(Test-Path -Path $ChocoPath) -and (Test-Path -Path $KpmPath)){
-    Copy-Item -Path $KpmPath -Destination $ChocoPath -Force -Verbose
+if(!(Test-Path -Path $ChocoPath)){
+    Write-Output "choco.exe is missing"
+    if((Test-Path -Path $KpmPath)){
+        Copy-Item -Path $KpmPath -Destination $ChocoPath -Force -Verbose
+    } else {
+        Write-Warning 'Kabuto_Patch_Manager is missing'
+        exit 3
+    }
 }
