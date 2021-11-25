@@ -12,6 +12,4 @@ function Import-SyncroModule {
     $env:RepairTechUUID             = $UUID
 
     Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
-
-    $env:RepairTechApiBaseURL = $env:RepairTechApiSubDomain = $env:RepairTechFilePusherPath = $env:RepairTechUUID = $null
 }
