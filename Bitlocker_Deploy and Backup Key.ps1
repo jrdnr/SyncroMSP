@@ -3,6 +3,7 @@
 #  Origional Author: AJJAXNET (https://pastebin.com/u/AJJaxNet)
 #
 #  Updated for usability and conistent formating.
+#  Added backup to Azure AD and onprem Domain
 
 
 [cmdletbinding()]
@@ -15,14 +16,41 @@
 
   )
 
-Import-Module $env:SyncroModule
+# Set the TLS version used by the PowerShell client to TLS 1.2.
+if ([System.Net.ServicePointManager]::SecurityProtocol -lt [System.Net.SecurityProtocolType]::Tls12){
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+}
 
-function Get-Bitlocker-RecoveryPasswords {
+# Just import the module if $env vars are set
+if ($env:SyncroModule){
+    Import-Module $env:SyncroModule -WarningAction SilentlyContinue
+} else {
+    # Set up $env: Variables and import the syncro module
+    try {
+        $syncroReg = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain,uuid -ErrorAction Stop
+        $env:RepairTechApiBaseURL       = 'syncromsp.com'
+        $env:RepairTechApiSubDomain     = $syncroReg.shop_subdomain
+        $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
+        $env:RepairTechUUID             = $syncroReg.uuid
+        $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
+        Import-Module $env:SyncroModule -WarningAction SilentlyContinue
+    }
+    catch {
+        'Could not find Syncro Module info'
+    }
+}
+
+function Save-BitlockerRecoveryPasswords {
     param(
         [Parameter(Mandatory=$true)]
         [Boolean]
         $SaveToSyncro
     )
+
+    [bool]$saveToAD = (Get-CimInstance win32_computersystem).PartOfDomain
+    $dsregcmd = dsregcmd /status
+    [bool]$SavetoAzAd = $dsregcmd | Where-Object {$_ -match 'AzureAdJoined'} |
+                    ForEach-Object {($_ -split ':' | Select-Object -Last 1).trim() -eq 'YES'}
 
     $textOutput = ""
 
@@ -33,10 +61,17 @@ function Get-Bitlocker-RecoveryPasswords {
     $BitlockerVolumes |
         ForEach-Object {
             $MountPoint = $_.MountPoint
-            $RecoveryKey = [string]($_.KeyProtector).RecoveryPassword
-            if ($RecoveryKey.Length -gt 5) {
-                Write-Output ("The drive $MountPoint has a recovery key $RecoveryKey.")
-                $textOutput += "$MountPoint/ $RecoveryKey"
+            $RecoveryKey = $_.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }
+            [string]$RecoveryPw = $RecoveryKey.RecoveryPassword
+            if ($saveToAD -eq $true) {
+                Backup-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $RecoveryKey.KeyProtectorID
+            }
+            if ($saveToAzAD -eq $true) {
+                BackupToAAD-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $RecoveryKey.KeyProtectorID
+            }
+            if ($RecoveryPw.Length -gt 5) {
+                Write-Output ("The drive $MountPoint has a recovery key $RecoveryPw.")
+                $textOutput += "$MountPoint/ $RecoveryPw"
                 $textOutput += "`r`n"
             }
         }
@@ -65,11 +100,7 @@ try {
 
     Start-Sleep -Seconds 30
 
-    #$key = (Get-BitLockerVolume -MountPoint $OSDrive).KeyProtector|?{$_.KeyProtectorType -eq 'RecoveryPassword'}
-    #$keyPass = [String]$key.RecoveryPassword
-    #Write-Host "Recovery key: $keyPass"
-
-    Get-Bitlocker-RecoveryPasswords -SaveToSyncro $true
+    Save-BitlockerRecoveryPasswords -SaveToSyncro $true
 }
 catch {
     Write-Host "Error while setting up Bitlocker, make sure that you are running the cmdlet as an admin: $_"
