@@ -7,13 +7,13 @@ try{
     # Get Bitlocker Volumes or exit.
     $BitLockerVolume = Get-BitLockerVolume -ErrorAction stop
 
-    # Create output as [string] for Text area Asset-Field.
     $Report = $BitLockerVolume |
         ForEach-Object {
             $MountPoint = $_.MountPoint
-            $RecoveryKey = [string]($_.KeyProtector).RecoveryPassword
+            $ProtectorId, $RecoveryKey = ($_.KeyProtector) | Where-Object {![string]::IsNullOrEmpty($_.RecoveryPassword)} |
+                ForEach-Object {$_.KeyProtectorId,$_.RecoveryPassword}
             if ($RecoveryKey.Length -gt 5) {
-                Write-Output ("Drive $MountPoint recovery key: $RecoveryKey")
+                Write-Output ("$MountPoint Id:$ProtectorID, key: $RecoveryKey")
             }
         } | Out-String
 
