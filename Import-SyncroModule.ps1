@@ -1,6 +1,6 @@
 function Import-SyncroModule {
     param (
-        #Defaults to the UUID of local system but you can provide the UUID of your test system.
+        #Defaults to the UUID of local system but you can provide the UUID of Any other Syncro Asset instead.
         $UUID = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid -ErrorAction Stop).uuid
     )
 
