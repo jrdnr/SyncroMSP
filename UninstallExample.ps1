@@ -4,7 +4,7 @@ $AppSearch = 'screenconnect*'
 
 function Get-InstalledApps {
     param (
-        [string]$App,
+        [string]$App = '*',
         [string]$Publisher = '*'
     )
     $installLocation = @(
@@ -13,7 +13,7 @@ function Get-InstalledApps {
     )
     foreach ($il in $installLocation){
         get-childitem $il | ForEach-Object { Get-ItemProperty $_.PSPath } |
-            Select-Object DisplayVersion,InstallDate,ModifyPath,Publisher,UninstallString,Language,DisplayName |
+            #Select-Object DisplayVersion,InstallDate,ModifyPath,Publisher,UninstallString,Language,DisplayName |
             Where-Object {$_.DisplayName -like $App -and $_.Publisher -like $Publisher}
     }
 }
