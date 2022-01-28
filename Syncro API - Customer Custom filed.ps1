@@ -18,7 +18,7 @@ $ApiBaseURL = $env:RepairTechApiBaseURL
 # Your account sub domain will magically be imported.
 $ApiSubDomain = $env:RepairTechApiSubDomain
 
-function Customer-Update-Field {
+function Update-CustomerCustomField {
     param(
         [Parameter(Mandatory=$true)]
         [String]
@@ -63,4 +63,4 @@ $payload = @"
 }
 
 # This is the function call to update the custom field of a customer. I would recommend you to populate $CustomerID using a script variable that uses the "{{customer_id}}" platform variable
-Customer-Update-Field -ApiToken $ApiToken -CustomerId $CustomerID -CustomField "Customer test" -CustomFieldValue "testing"
+Update-CustomerCustomField -ApiToken $ApiToken -CustomerId $CustomerID -CustomField "Customer test" -CustomFieldValue "testing"
