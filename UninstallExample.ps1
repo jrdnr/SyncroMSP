@@ -1,7 +1,7 @@
 #Example application uninstall. Not all apps register in either of these locations but this will work for some apps
 
-$AppSearch = 'Screenconnect'
-$Publisher = 'MspPlatform|N-able|SolarWinds|Solve IT'
+# $AppSearch = 'Screenconnect'
+$Publisher = 'MspPlatform|N-able|SolarWinds'
 $SilentUninstallFlag = '/SILENT'
 $exit = 0
 function Get-InstalledApps {
@@ -23,7 +23,8 @@ function Get-InstalledApps {
     }
 }
 
-$Applist = Get-InstalledApps -Publisher $Publisher
+$Applist = Get-InstalledApps -Publisher $Publisher #-App $AppSearch
+
 foreach ($a in $Applist){
     'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
     if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
