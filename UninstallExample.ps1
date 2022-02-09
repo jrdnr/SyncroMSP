@@ -7,7 +7,8 @@ $exit = 0
 function Get-InstalledApps {
     param (
         [string]$App,
-        [string]$Publisher
+        [string]$Publisher,
+        [switch]$or
     )
     $installLocation = @(
         "HKLM:\software\microsoft\windows\currentversion\uninstall"
@@ -17,13 +18,30 @@ function Get-InstalledApps {
         #| Select-Object DisplayVersion,InstallDate,ModifyPath,Publisher,UninstallString,Language,DisplayName
 
     foreach ($a in $AllApps){
-        if ($a.DisplayName -match $App -and $a.Publisher -match $Publisher){
+        $test = @(
+            ($a.DisplayName -match $App),
+            ($a.Publisher -match $Publisher)
+        )
+        if ($true -ne $or -and $test -notcontains $false){
+            $a
+        } elseif ($true -eq $or -and $test -contains $true) {
             $a
         }
     }
 }
 
-$Applist = Get-InstalledApps -Publisher $Publisher #-App $AppSearch
+$splat = @{}
+if (![string]::IsNullOrWhiteSpace($AppSearch)){
+    $splat.Add('App',$AppSearch)
+}
+if (![string]::IsNullOrWhiteSpace($Publisher)){
+    $splat.Add('Publisher',$Publisher)
+}
+if ($or -eq $true){
+    $splat.Add('or',$true)
+}
+
+Get-InstalledApps @splat | Tee-Object -Variable Applist | Format-Table -Property InstallDate, DisplayName, Publisher, DisplayVersion
 
 foreach ($a in $Applist){
     'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
