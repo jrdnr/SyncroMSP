@@ -5,12 +5,13 @@ function Import-SyncroModule {
     )
 
     # Set up $env: vars for Syncro Module
-    $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
-    $env:RepairTechApiBaseURL       = 'syncromsp.com'
-    $env:RepairTechApiSubDomain     = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain).shop_subdomain
-    $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
-    $env:RepairTechUUID             = $UUID
-
+    if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+        $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
+        $env:RepairTechApiBaseURL       = 'syncromsp.com'
+        $env:RepairTechApiSubDomain     = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain).shop_subdomain
+        $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
+        $env:RepairTechUUID             = $UUID
+    }
     if (Test-Path -Path $env:SyncroModule) {
         Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
     } else {

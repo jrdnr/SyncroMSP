@@ -162,12 +162,13 @@ function Import-SyncroModule {
     )
 
     # Set up $env: vars for Syncro Module
-    $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
-    $env:RepairTechApiBaseURL       = 'syncromsp.com'
-    $env:RepairTechApiSubDomain     = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain).shop_subdomain
-    $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
-    $env:RepairTechUUID             = $UUID
-
+    if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+        $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
+        $env:RepairTechApiBaseURL       = 'syncromsp.com'
+        $env:RepairTechApiSubDomain     = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain).shop_subdomain
+        $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
+        $env:RepairTechUUID             = $UUID
+    }
     if (Test-Path -Path $env:SyncroModule) {
         Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
     } else {
@@ -188,9 +189,9 @@ if ($env:SyncroModule -and $null -ne $InstalledAV){
     $enabledAVBody = $AvEnabled.Displayname -join ','
     Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody
 
-    $date  = if([string]::IsNullOrWhiteSpace($a.Timestamp)){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
-    $AllAV = @('Displayname,Enabled,Date')
-    $AllAV += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
-    $AllAV = ($AllAV | Out-String) -replace "`r",""
-    Set-Asset-Field -Name $AllAV -Value $AllAV
+    $date      = if([string]::IsNullOrWhiteSpace($a.Timestamp)){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
+    $AllAVBody = @('Displayname,Enabled,Date')
+    $AllAVBody += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
+    $AllAVBody = ($AllAVBody | Out-String) -replace "`r",""
+    Set-Asset-Field -Name $AllAV -Value $AllAVBody
 }
