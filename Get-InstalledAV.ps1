@@ -6,9 +6,11 @@
 #   Description: This Var will be used in a regex match aganst AV Display Name. If Match -eq $True will raise RMM Alert
 #
 # Asset Custom Fields
-#   Name: "Enabled AV", Type: "Text Field"
+#   Name:
+    $EnabledAV = "Enabled AV" #Type: "Text Field"
 #       Description: Will only contain the "Display Name" of the Enabled AV(s)
-#   Name: "All AV", Type: "Text Area"
+#   Name:
+    $AllAV = "All AV"         #Type: "Text Area"
 #       Description: Multi line output CSV for all detected AVs "DisplayName,Enabled,Date"
 
 Function Get-AVStatus {
@@ -183,11 +185,11 @@ if ($env:SyncroModule -and $null -ne $InstalledAV){
         $body = ($AvEnabled | Out-String) -replace "`r",""
         Rmm-Alert -Category 'Enabled_AV_Error' -Body $body
     }
-    $enabledAV = $AvEnabled.Displayname -join ','
-    Set-Asset-Field -Name 'Enabled AV' -Value $enabledAV
+    $enabledAVBody = $AvEnabled.Displayname -join ','
+    Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody
 
     $AllAV = @('Displayname,Enabled,Date')
     $AllAV += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, ([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
     $AllAV = ($AllAV | Out-String) -replace "`r",""
-    Set-Asset-Field -Name 'All AV' -Value $AllAV
+    Set-Asset-Field -Name $AllAV -Value $AllAV
 }
