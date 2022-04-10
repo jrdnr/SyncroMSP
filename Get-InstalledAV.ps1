@@ -188,8 +188,9 @@ if ($env:SyncroModule -and $null -ne $InstalledAV){
     $enabledAVBody = $AvEnabled.Displayname -join ','
     Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody
 
+    $date  = if([string]::IsNullOrWhiteSpace($a.Timestamp)){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
     $AllAV = @('Displayname,Enabled,Date')
-    $AllAV += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, ([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
+    $AllAV += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
     $AllAV = ($AllAV | Out-String) -replace "`r",""
     Set-Asset-Field -Name $AllAV -Value $AllAV
 }
