@@ -11,5 +11,9 @@ function Import-SyncroModule {
     $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
     $env:RepairTechUUID             = $UUID
 
-    Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
+    if (Test-Path -Path $env:SyncroModule) {
+        Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
+    } else {
+        [Environment]::SetEnvironmentVariable('SyncroModule',$null)
+    }
 }
