@@ -1,4 +1,4 @@
-#requires -version 5.1
+#requires -version 4.0
 # This Script will not work on Server OS versions
 # For Syncro all Vars/Fields are optional
 # Runtime ScriptVariable:
