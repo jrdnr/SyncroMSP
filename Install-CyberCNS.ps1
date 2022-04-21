@@ -2,10 +2,11 @@
 # $InstType (recomend Dropdown), Values: 'Probe','LightWeight','Scan','auto'
 # $ClientID (recomend Platform variable set to customer custom field)
 # $ClientSecret (recomend Platform variable set to customer custom field)
+# $Uninstall (recomend Dropdown), Values: 'True', 'False'
 #
 # $Source OR Required File (use to specify download link or save cybercnsagent.exe to C:\Windows\Temp)
 $installTypes = @('Probe','LightWeight','Scan','auto')
-if ($InstType -notin $installTypes){
+if ($installTypes -notcontains $InstType){
     throw "`$InstType must equal one of ($($installTypes -join ', '))"
     exit 1
 }
@@ -13,6 +14,12 @@ if ($InstType -notin $installTypes){
 if ([string]::IsNullOrEmpty($ClientID) -or [string]::IsNullOrEmpty($ClientSecret)){
     throw '$ClientID and $ClientSecret are both required to install the agent.'
     exit 1
+}
+
+if ($Uninstall -eq 'True' -and (Test-Path -Path 'C:\Program Files (x86)\CyberCNSAgentV2\uninstall.bat')){
+    net stop cybercnsagentv2
+    Start-Process -FilePath 'C:\Program Files (x86)\CyberCNSAgentV2\uninstall.bat' -NoNewWindow -Wait
+    Start-Sleep -Seconds 5
 }
 
 $CyberCNSService = Get-Service -Name CyberCNSAgent* -ErrorAction SilentlyContinue
@@ -31,9 +38,14 @@ if ($null -ne $CyberCNSService){
 }
 
 if ($InstType -eq 'auto'){
-    if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -ErrorAction SilentlyContinue).State -eq 'Enabled') {
-        $InstType = 'Probe'
-    } else {
+    try {
+        if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V -ErrorAction SilentlyContinue).State -eq 'Enabled') {
+            $InstType = 'Probe'
+        } else {
+            $InstType = 'LightWeight'
+        }
+    }
+    catch {
         $InstType = 'LightWeight'
     }
 }
@@ -41,8 +53,13 @@ if ($InstType -eq 'auto'){
 $destination = Join-Path -Path 'C:\Windows\Temp\' -ChildPath 'cybercnsagent.exe'
 switch -Regex ($Source) {
     'https://\w+\.mycybercns\.com/.*/cybercnsagent\.exe' {
-        Invoke-WebRequest -Uri $Source -OutFile $destination
+        try {
+            Start-BitsTransfer -Source $Source -Destination $destination -Description 'Downloading CyberCNS Agent using Bits' -ErrorAction Stop
         }
+        catch {
+            (New-Object Net.WebClient).DownloadFile($Source, $destination)
+        }
+    }
     Default {
         if(!(Test-Path -Path $destination)){
             Throw "'$Destination' not found"
