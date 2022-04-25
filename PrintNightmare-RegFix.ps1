@@ -1,19 +1,15 @@
-if ($env:SyncroModule){
-    Import-Module $env:SyncroModule -WarningAction SilentlyContinue
-} else {
-    # Set up $env: Variables and import the syncro module
-    try {
-        $syncroReg = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name shop_subdomain,uuid -ErrorAction Stop
-        $env:RepairTechApiBaseURL       = 'syncromsp.com'
-        $env:RepairTechApiSubDomain     = $syncroReg.shop_subdomain
-        $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
-        $env:RepairTechUUID             = $syncroReg.uuid
-        $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
-        Import-Module $env:SyncroModule -WarningAction SilentlyContinue
-    }
-    catch {
-        'Could not find Syncro Module info'
-    }
+# Set up $env: vars for Syncro Module
+if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+    $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
+    $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
+    $env:RepairTechKabutoApiUrl     = 'https://rmm.syncromsp.com'
+    $env:RepairTechSyncroApiUrl     = 'https://{subdomain}.syncroapi.com'
+    $env:RepairTechSyncroSubDomain  = $SyncroRegKey.shop_subdomain
+    $env:RepairTechUUID             = $SyncroRegKey.uuid
+    $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
+}
+if (Test-Path -Path $env:SyncroModule) {
+    Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
 }
 
 $path = 'hklm:'

@@ -11,12 +11,23 @@
   Purpose/Change: Initial script development
 #>
 
+# Set up $env: vars for Syncro Module
+if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+    $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
+    $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
+    $env:RepairTechKabutoApiUrl     = 'https://rmm.syncromsp.com'
+    $env:RepairTechSyncroApiUrl     = 'https://{subdomain}.syncroapi.com'
+    $env:RepairTechSyncroSubDomain  = $SyncroRegKey.shop_subdomain
+    $env:RepairTechUUID             = $SyncroRegKey.uuid
+    $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
+}
+
 # The API token used for the request. Create a API key with permission "Customer - Edit". It is advised to populated it with the "Script variable" feature of syncro
 #$ApiToken = "test"
 # Will usually be syncromsp.com
-$ApiBaseURL = $env:RepairTechApiBaseURL
+$ApiBaseURL = 'syncromsp.com'
 # Your account sub domain will magically be imported.
-$ApiSubDomain = $env:RepairTechApiSubDomain
+$ApiSubDomain = $env:RepairTechSyncroSubDomain
 
 function Customer-Update-Field {
     param(
