@@ -31,33 +31,40 @@ function Get-InstalledApps {
 }
 
 $splat = @{}
-if (![string]::IsNullOrWhiteSpace($AppSearch)){
+if ($AppSearch -notmatch '^\s*$'){
     $splat.Add('App',$AppSearch)
 }
-if (![string]::IsNullOrWhiteSpace($Publisher)){
+if ($Publisher -notmatch '^\s*$'){
     $splat.Add('Publisher',$Publisher)
 }
-if ($or -eq $true){
+if ($or -eq 'True'){
     $splat.Add('or',$true)
 }
 
 Get-InstalledApps @splat | Tee-Object -Variable Applist | Format-Table -Property InstallDate, DisplayName, Publisher, DisplayVersion
 
-foreach ($a in $Applist){
-    'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
-    if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
-        Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait
-    } elseif ($a.UninstallString -like 'C:\Program Files*'){
-        Start-Process -FilePath $a.UninstallString -ArgumentList $SilentUninstallFlag -Wait
-    } elseif ($a.UninstallString -like 'MsiExec.exe*'){
-        $ArgList = (($a.UninstallString -split 'MsiExec.exe')[1].trim() -replace '/I{','/X{').ToString()
-        $ArgList = '{0} /quiet /norestart' -f $ArgList
-        Start-Process -FilePath MsiExec.exe -ArgumentList $ArgList -Wait
-    } else {
-        "Could not auto uninstall $($a.DisplayName)"
-        "Uninstall String: '$($a.UninstallString)'"
-        $exit = 2
+if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -ge 5){
+    foreach ($a in $Applist){
+        'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
+        if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
+            Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait
+        } elseif ($a.UninstallString -like 'C:\Program Files*'){
+            Start-Process -FilePath $a.UninstallString -ArgumentList $SilentUninstallFlag -Wait
+        } elseif ($a.UninstallString -like 'MsiExec.exe*'){
+            $ArgList = (($a.UninstallString -split 'MsiExec.exe')[1].trim() -replace '/I{','/X{').ToString()
+            $ArgList = '{0} /quiet /norestart' -f $ArgList
+            Start-Process -FilePath MsiExec.exe -ArgumentList $ArgList -Wait
+        } else {
+            "Could not auto uninstall $($a.DisplayName)"
+            "Uninstall String: '$($a.UninstallString)'"
+            $exit = 2
+        }
     }
+} else {
+    Write-Warning "Search terms to broad to auto uninstall"
+    Write-Host "INFO: `$Applist.count is $($Applist.count)"
+    Write-Host "INFO: Apps: '$AppSearch', Publisher: '$Publisher'"
+    $exit = 3
 }
 
 exit $exit
