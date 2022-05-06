@@ -43,7 +43,7 @@ if ($or -eq 'True'){
 
 Get-InstalledApps @splat | Tee-Object -Variable Applist | Format-Table -Property InstallDate, DisplayName, Publisher, DisplayVersion
 
-if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -ge 5){
+if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 5){
     foreach ($a in $Applist){
         'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
         if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
@@ -62,7 +62,8 @@ if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -ge 
     }
 } else {
     Write-Warning "Search terms to broad to auto uninstall"
-    Write-Host "INFO: `$Applist.count is $($Applist.count)"
+    $totalApps = $Applist.count
+    Write-Host "INFO: `$Applist.count is $totalApps"
     Write-Host "INFO: Apps: '$AppSearch', Publisher: '$Publisher'"
     $exit = 3
 }
