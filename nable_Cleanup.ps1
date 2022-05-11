@@ -110,12 +110,10 @@ try {
     Get-ChildItem $CredPovider | Where-Object {
         (Get-ItemProperty (Join-Path -Path $CredPovider -ChildPath $_.PSChildName) |
         Select-Object -ExpandProperty '(default)') -match $dll} |
-        Remove-Item -Force -ErrorAction Stop
-    'Removed MSPACredentialProvider from Registry'
+        Remove-Item -Force -ErrorAction Stop -Verbose
     Get-ChildItem -Path "$env:SystemRoot\system32\MSPACredentialProvider*" |
         Where-Object name -match $dll -OutVariable MSPACredentialProvider |
-        Remove-Item -Force -ErrorAction Stop
-    "Removed MSPACredentialProvider dll from System32"
+        Remove-Item -Force -ErrorAction Stop -Verbose
 }
 catch {
     if ($MSPACredentialProvider.Count -lt 1){
