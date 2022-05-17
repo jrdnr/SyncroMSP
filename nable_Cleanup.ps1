@@ -5,17 +5,16 @@ $exit = 0
 $FileLocation = @(
     'C:\Program Files\'
     'C:\Program Files (x86)\'
-    'C:\ProgramData'
+    'C:\ProgramData\'
 )
 
 $folderList = @(
     'BeAnywhere'
     'Level Platforms'
     'MspPlatform'
-    'N-able*'
-    'Package Cache'
-    'Rmm'
-    'SolarWinds*'
+    'N-able'
+    '^Package Cache$'
+    'SolarWinds'
 )
 $SvcPath = @(
     'HKLM:\SYSTEM\CurrentControlSet\Services',
@@ -102,8 +101,8 @@ if($null -ne $Applist){
     }
 }
 
-Get-ChildItem -Path $FileLocation -Include $folderList -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose
-Get-ChildItem -Path $SvcPath -Include $SvcSubKey -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose
+Get-ChildItem -Path $FileLocation -ErrorAction SilentlyContinue | Where-Object {$_.name -match ($folderList -join '|')} | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose
+Get-ChildItem -Path $SvcPath -ErrorAction SilentlyContinue | Where-Object {$_.name -match ($SvcSubKey -join '|')} | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose
 Get-ChildItem -Path $RegPath -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction Continue -Verbose
 try {
     $CredPovider = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\'
