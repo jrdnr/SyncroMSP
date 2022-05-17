@@ -47,13 +47,13 @@ function Import-SyncroModule {
     )
 
     # Set up $env: vars for Syncro Module
-    if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+    if($env:SyncroModule -match '^\s*$'){
         $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
         $env:RepairTechFilePusherPath  = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
         $env:RepairTechKabutoApiUrl    = 'https://rmm.syncromsp.com'
         $env:RepairTechSyncroApiUrl    = 'https://{subdomain}.syncroapi.com'
         $env:RepairTechSyncroSubDomain = $SyncroRegKey.shop_subdomain
-        $env:RepairTechUUID            = if([string]::IsNullOrWhiteSpace($UUID)){ $SyncroRegKey.uuid } else {$UUID}
+        $env:RepairTechUUID            = if($UUID -match '^\s*$'){ $SyncroRegKey.uuid } else {$UUID}
         $env:SyncroModule              = "$env:ProgramData\Syncro\bin\module.psm1"
     }
     if ((Test-Path -Path $env:SyncroModule) -and ($PSVersionTable.PSVersion -ge [system.version]'4.0')) {
@@ -83,20 +83,22 @@ function Get-InstalledApps {
 }
 
 $Applist = Get-InstalledApps -Publisher $Publisher
-foreach ($a in $Applist){
-    'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
-    if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
-        Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait
-    } elseif ($a.UninstallString -like 'C:\Program Files*'){
-        Start-Process -FilePath $a.UninstallString -ArgumentList $SilentUninstallFlag -Wait
-    } elseif ($a.UninstallString -like 'MsiExec.exe*'){
-        $ArgList = (($a.UninstallString -split 'MsiExec.exe')[1].trim() -replace '/I{','/X{').ToString()
-        $ArgList = '{0} /quiet /norestart' -f $ArgList
-        Start-Process -FilePath MsiExec.exe -ArgumentList $ArgList -Wait
-    } else {
-        "Could not auto uninstall $($a.DisplayName)"
-        "Uninstall String: '$($a.UninstallString)'"
-        $exit = 2
+if($null -ne $Applist){
+    foreach ($a in $Applist){
+        'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
+        if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
+            Start-Process -FilePath $Matches[1] -ArgumentList $Matches[2] -Wait
+        } elseif ($a.UninstallString -like 'C:\Program Files*'){
+            Start-Process -FilePath $a.UninstallString -ArgumentList $SilentUninstallFlag -Wait
+        } elseif ($a.UninstallString -like 'MsiExec.exe*'){
+            $ArgList = (($a.UninstallString -split 'MsiExec.exe')[1].trim() -replace '/I{','/X{').ToString()
+            $ArgList = '{0} /quiet /norestart' -f $ArgList
+            Start-Process -FilePath MsiExec.exe -ArgumentList $ArgList -Wait
+        } else {
+            "Could not auto uninstall $($a.DisplayName)"
+            "Uninstall String: '$($a.UninstallString)'"
+            $exit = 2
+        }
     }
 }
 
@@ -112,7 +114,7 @@ try {
         Select-Object -ExpandProperty '(default)') -match $dll} |
         Remove-Item -Force -ErrorAction Stop -Verbose
     Get-ChildItem -Path "$env:SystemRoot\system32\MSPACredentialProvider*" |
-        Where-Object name -match $dll -OutVariable MSPACredentialProvider |
+        Where-Object {$_.name -match $dll } -OutVariable MSPACredentialProvider |
         Remove-Item -Force -ErrorAction Stop -Verbose
 }
 catch {
@@ -128,12 +130,14 @@ catch {
             }
             $HKLMPath = $NewPath
         }
-        New-Item -Path $HKLMPath -Name CurrentRebootAttemps -Value 'Reboot required after Registry Update'
+        if (!(Test-Path -Path (Join-Path -Path $HKLMPath -ChildPath CurrentRebootAttemps))) {
+            New-Item -Path $HKLMPath -Name CurrentRebootAttemps -Value 'Reboot required after Registry Update'
+        }
     }
     $exit = 1
 }
 
 Import-SyncroModule
-Close-Rmm-Alert -Category 'Ncentral_DLL'
+if (Test-Path -Path $env:SyncroModule) {Close-Rmm-Alert -Category 'Ncentral_DLL' }
 
 exit $exit
