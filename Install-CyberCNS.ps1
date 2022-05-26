@@ -11,7 +11,7 @@ if ($installTypes -notcontains $InstType){
     exit 1
 }
 
-if ([string]::IsNullOrEmpty($ClientID) -or [string]::IsNullOrEmpty($ClientSecret)){
+if ($ClientID -match '^\s*$' -or $ClientSecret -match '^\s*$'){
     throw '$ClientID and $ClientSecret are both required to install the agent.'
     exit 1
 }
@@ -32,7 +32,6 @@ if ($null -ne $CyberCNSService){
         $CyberCNSService = Get-Service -Name CyberCNSAgent* -ErrorAction SilentlyContinue
     }
     if ($CyberCNSService.Status -eq 'Running'){
-        Write-Output "CyberCNS already running"
         exit 0
     }
 }
