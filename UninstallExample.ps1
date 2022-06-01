@@ -1,20 +1,49 @@
-#Example application uninstall. Not all apps register in either of these locations but this will work for some apps
+#Requires -RunAsAdministrator
 
-# $AppSearch = 'Screenconnect'
-# $Publisher = 'MspPlatform|N-able|SolarWinds'
+#Example application uninstall, will attempt to find apps installed in system locations as well as User hives.
+# Not all apps record uninstall info in these locations so may not work for all apps.
+
+# $AppSearch = 'Wave Browser'
+# $Publisher = 'Piriform'
 $SilentUninstallFlag = '/SILENT'
 $exit = 0
+
 function Get-InstalledApps {
     param (
         [string]$App,
         [string]$Publisher,
         [switch]$or
     )
-    $installLocation = @(
-        "HKLM:\software\microsoft\windows\currentversion\uninstall"
-        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\"
-    )
-    $AllApps = get-childitem $installLocation | ForEach-Object { Get-ItemProperty $_.PSPath }
+
+    if (!(Get-PSDrive -Name HKU)){
+        New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS | Out-Null
+    }
+    [array]$users = Get-WMIObject -class Win32_UserProfile | Sort-Object -Property LastUseTime |
+        Where-Object { $_.LocalPath -like 'c:\user*' }
+    $users += [PSCustomObject]@{LocalPath = 'c:\users\.DEFAULT'; SID = '.DEFAULT'}
+
+    $InstLocation = @{}
+    foreach ($u in $Users) {
+        $hkuPath = "HKU\$($u.SID)"
+        $ntuserdat = Join-Path -Path $u.LocalPath -ChildPath NTUSER.DAT
+        $UserHive = "HKU:\$($u.SID)"
+        $unload = $false
+
+        if (!(Test-Path -Path $UserHive)){
+            reg load $hkuPath $ntuserdat
+            $unload = $true
+        }
+        $UPath = Join-Path -Path $UserHive -ChildPath 'Software\Microsoft\Windows\CurrentVersion\Uninstall'
+        if (Test-Path -Path $UPath){
+            $InstLocation.Add($UPath,$unload)
+        }
+    }
+
+    $InstLocation += @{
+        "HKLM:\software\microsoft\windows\currentversion\uninstall" = $false
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\" = $false
+    }
+    $AllApps = get-childitem $InstLocation.Keys.split() | ForEach-Object { Get-ItemProperty $_.PSPath }
         #| Select-Object DisplayVersion,InstallDate,ModifyPath,Publisher,UninstallString,Language,DisplayName
 
     foreach ($a in $AllApps){
@@ -26,6 +55,12 @@ function Get-InstalledApps {
             $a
         } elseif ($true -eq $or -and $test -contains $true) {
             $a
+        }
+    }
+
+    foreach ($k in $InstLocation.Keys){
+        if($InstLocation.$k -eq $true){
+            reg unload $hkuPath
         }
     }
 }
@@ -55,9 +90,18 @@ if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 
             $ArgList = '{0} /quiet /norestart' -f $ArgList
             Start-Process -FilePath MsiExec.exe -ArgumentList $ArgList -Wait
         } else {
-            "Could not auto uninstall $($a.DisplayName)"
-            "Uninstall String: '$($a.UninstallString)'"
-            $exit = 2
+            try {
+                $ErrorActionPreference = 'Stop'
+                Get-Package -Name $a.DisplayName | Uninstall-Package
+            }
+            catch {
+                "Could not auto uninstall $($a.DisplayName)"
+                "Uninstall String: '$($a.UninstallString)'"
+                $exit = 2
+            }
+            finally {
+                $ErrorActionPreference = 'Continue'
+            }
         }
     }
 } else {
