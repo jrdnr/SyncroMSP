@@ -15,7 +15,7 @@ function Get-InstalledApps {
         [switch]$or
     )
 
-    if (!(Get-PSDrive -Name HKU)){
+    if ((Get-PSDrive | Where-Object {$_.Name -eq 'HKU'}).count -lt 1){
         New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS | Out-Null
     }
     [array]$users = Get-WMIObject -class Win32_UserProfile | Sort-Object -Property LastUseTime |
@@ -30,7 +30,7 @@ function Get-InstalledApps {
         $unload = $false
 
         if (!(Test-Path -Path $UserHive)){
-            reg load $hkuPath $ntuserdat
+            reg load $hkuPath $ntuserdat 2>&1 | Out-Null
             $unload = $true
         }
         $UPath = Join-Path -Path $UserHive -ChildPath 'Software\Microsoft\Windows\CurrentVersion\Uninstall'
@@ -60,7 +60,7 @@ function Get-InstalledApps {
 
     foreach ($k in $InstLocation.Keys){
         if($InstLocation.$k -eq $true){
-            reg unload $hkuPath
+            reg unload $hkuPath 2>&1 | Out-Null
         }
     }
 }
@@ -92,7 +92,7 @@ if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 
         } else {
             try {
                 $ErrorActionPreference = 'Stop'
-                Get-Package -Name $a.DisplayName | Uninstall-Package
+                Get-Package -Name $a.DisplayName -IncludeWindowsInstaller | Uninstall-Package
             }
             catch {
                 "Could not auto uninstall $($a.DisplayName)"
