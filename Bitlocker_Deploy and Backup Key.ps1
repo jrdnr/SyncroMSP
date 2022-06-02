@@ -11,9 +11,7 @@
     [Parameter()]
     [ValidateNotNullOrEmpty()]
     [string] $OSDrive = $env:SystemDrive,
-    # Required Field Type: Text
-    [string] $SyncroBL = "Bitlocker Backup Key"
-
+    [string] $SyncroBL = 'Bitlocker Drives'
   )
 
 # Set the TLS version used by the PowerShell client to TLS 1.2.
@@ -38,8 +36,7 @@ if (Test-Path -Path $env:SyncroModule) {
 function Save-BitlockerRecoveryPasswords {
     param(
         [Parameter(Mandatory=$true)]
-        [Boolean]
-        $SaveToSyncro
+        [string] $SyncroBL
     )
 
     [bool]$saveToAD = (Get-CimInstance win32_computersystem).PartOfDomain
@@ -50,28 +47,30 @@ function Save-BitlockerRecoveryPasswords {
     $textOutput = ""
 
     # Identify all the Bitlocker volumes.
-    $BitlockerVolumes = Get-BitLockerVolume
+    [array]$BitlockerVolumes = Get-BitLockerVolume
 
     # For each volume, get the RecoveryPassword and display it.
     $BitlockerVolumes |
         ForEach-Object {
             $MountPoint = $_.MountPoint
             $RecoveryKey = $_.KeyProtector | Where-Object { $_.KeyProtectorType -eq 'RecoveryPassword' }
-            [string]$RecoveryPw = $RecoveryKey.RecoveryPassword
-            if ($saveToAD -eq $true) {
-                Backup-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $RecoveryKey.KeyProtectorID
-            }
-            if ($saveToAzAD -eq $true) {
-                BackupToAAD-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $RecoveryKey.KeyProtectorID
-            }
-            if ($RecoveryPw.Length -gt 5) {
-                Write-Output ("The drive $MountPoint has a recovery key $RecoveryPw.")
-                $textOutput += "$MountPoint/ $RecoveryPw"
-                $textOutput += "`r`n"
+            foreach($rk in $RecoveryKey){
+                [string]$RecoveryPw = $rk.RecoveryPassword
+                if ($saveToAD -eq $true) {
+                    Backup-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $rk.KeyProtectorID
+                }
+                if ($saveToAzAD -eq $true) {
+                    BackupToAAD-BitLockerKeyProtector -MountPoint $MountPoint -KeyProtectorId $rk.KeyProtectorID
+                }
+                if ($RecoveryPw.Length -gt 5) {
+                    Write-Verbose ("The drive $MountPoint has a recovery key $RecoveryPw.")
+                    $textOutput += "$MountPoint\ $RecoveryPw"
+                    $textOutput += "`r`n"
+                }
             }
         }
 
-    if ($saveToSyncro -eq $true) {
+    if ($SyncroBL -notmatch '^\s*$') {
         Set-Asset-Field -Name $SyncroBL -Value $textOutput
     }
 }
@@ -95,7 +94,7 @@ try {
 
     Start-Sleep -Seconds 30
 
-    Save-BitlockerRecoveryPasswords -SaveToSyncro $true
+    Save-BitlockerRecoveryPasswords -SyncroBL $SyncroBL
 }
 catch {
     Write-Host "Error while setting up Bitlocker, make sure that you are running the cmdlet as an admin: $_"
