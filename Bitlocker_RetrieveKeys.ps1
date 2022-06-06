@@ -1,3 +1,7 @@
+# ==============================================================================
+# ==            Created by Jordan Ritz, Eberly Systems LLC.                   ==
+# ==============================================================================
+#
 # Prerequisites: You must have a custom asset field
 #                Name: "Bitlocker Drives"
 #                Type: "Text area"
@@ -10,11 +14,10 @@ try{
     $Report = $BitLockerVolume |
         ForEach-Object {
             $MountPoint = $_.MountPoint
-            $ProtectorId, $RecoveryKey = ($_.KeyProtector) | Where-Object {![string]::IsNullOrEmpty($_.RecoveryPassword)} |
-                ForEach-Object {$_.KeyProtectorId,$_.RecoveryPassword}
-            if ($RecoveryKey.Length -gt 5) {
-                Write-Output ("$MountPoint Id:$ProtectorID, key: $RecoveryKey")
-            }
+            $_.KeyProtector | Where-Object {$_.RecoveryPassword -notmatch '^\s$' -and $_.RecoveryPassword.Length -gt 5} |
+                ForEach-Object {
+                    Write-Output "$MountPoint Id:$($_.KeyProtectorId), key:$($_.RecoveryPassword)"
+                }
         } | Out-String
 
     if ($Report.Length -ge 56){

@@ -70,7 +70,7 @@ function Save-BitlockerRecoveryPasswords {
             }
         }
 
-    if ($SyncroBL -notmatch '^\s*$') {
+    if ($SyncroBL -notmatch '^\s*$' -and $env:SyncroModule -notmatch '^\s*$') {
         Set-Asset-Field -Name $SyncroBL -Value $textOutput
     }
 }
@@ -87,8 +87,7 @@ try {
     if (((Get-BitLockerVolume -MountPoint $OSDrive).KeyProtector | Where-Object {$_.KeyProtectorType -eq 'RecoveryPassword'} | Measure-Object).Count -eq 0) {
         Write-Host "Adding a recovery password..."
         Enable-BitLocker -MountPoint $OSDrive -UsedSpaceOnly -RecoveryPasswordProtector
-    }
-    else {
+    } else {
         Write-Host "A recovery password is already defined, skipping creation."
     }
 
