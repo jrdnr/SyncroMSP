@@ -10,7 +10,6 @@ $FileLocation = @(
 
 $folderList = @(
     'BeAnywhere'
-    'Level Platforms'
     'MspPlatform'
     'N-able'
     '^Package Cache$'
