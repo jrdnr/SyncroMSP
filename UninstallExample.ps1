@@ -3,14 +3,18 @@
 #Example application uninstall, will attempt to find apps installed in system locations as well as User hives.
 # Not all apps record uninstall info in these locations so may not work for all apps.
 
-# $AppSearch = 'Wave Browser'
-# $Publisher = 'Piriform'
+# version 1.0
+# changes: update Var names, improve blank bypass for listing installed apps.
+
+# $RegexAppName = 'Wave Browser'
+# $RegexPublisher = 'Piriform'
 $SilentUninstallFlag = '/SILENT'
 $exit = 0
+$log = "$env:TEMP\installedApps.csv"
 
 function Get-InstalledApps {
     param (
-        [string]$App,
+        [string]$AppName,
         [string]$Publisher,
         [switch]$or
     )
@@ -48,7 +52,7 @@ function Get-InstalledApps {
 
     foreach ($a in $AllApps){
         $test = @(
-            ($a.DisplayName -match $App),
+            ($a.DisplayName -match $AppName),
             ($a.Publisher -match $Publisher)
         )
         if ($true -ne $or -and $test -notcontains $false){
@@ -66,19 +70,25 @@ function Get-InstalledApps {
 }
 
 $splat = @{}
-if ($AppSearch -notmatch '^\s*$'){
-    $splat.Add('App',$AppSearch)
+if ($RegexAppName -notmatch '^\s*$'){
+    $splat.Add('AppName',$RegexAppName)
 }
-if ($Publisher -notmatch '^\s*$'){
-    $splat.Add('Publisher',$Publisher)
+if ($RegexPublisher -notmatch '^\s*$'){
+    $splat.Add('Publisher',$RegexPublisher)
 }
 if ($or -eq 'True'){
     $splat.Add('or',$true)
 }
 
-Get-InstalledApps @splat | Tee-Object -Variable Applist | Format-Table -Property InstallDate, DisplayName, Publisher, DisplayVersion
+$ht = @{}
+Get-InstalledApps @splat | Sort-Object -Property DisplayName | Tee-Object -Variable Applist |
+    Where-Object {$_.DisplayName -notmatch '^[\.\s\*\+]*$' -and -not $ht.ContainsKey($_.DisplayName) } |
+    ForEach-Object {$ht.Add($_.DisplayName,$_.Publisher), $_} |
+    Select-Object -Property InstallDate, DisplayName, Publisher, DisplayVersion, UninstallString, QuietUninstallString -OutVariable report |
+    Export-Csv -NoTypeInformation -Path $log
+$report | Format-Table -AutoSize
 
-if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 5){
+if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 5){
     foreach ($a in $Applist){
         'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
         if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
@@ -104,12 +114,23 @@ if (($AppSearch + $Publisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 
             }
         }
     }
-} else {
+} elseif (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -gt 5){
     Write-Warning "Search terms to broad to auto uninstall"
-    $totalApps = $Applist.count
-    Write-Host "INFO: `$Applist.count is $totalApps"
-    Write-Host "INFO: Apps: '$AppSearch', Publisher: '$Publisher'"
     $exit = 3
 }
+
+$totalApps = $Applist.count
+Write-Host "INFO: `$Applist.count is $totalApps"
+Write-Host "INFO: Apps: '$RegexAppName', Publisher: '$RegexPublisher'"
+
+if ($report.count -ge 83){
+    Write-Host "Log Path: $log"
+    if ($env:SyncroModule){
+        Import-Module -Name $env:SyncroModule -WarningAction silentlycontinue
+        Upload-File -FilePath $log
+    }
+}
+
+Remove-Item -Path $log
 
 exit $exit
