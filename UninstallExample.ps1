@@ -88,6 +88,10 @@ Get-InstalledApps @splat | Sort-Object -Property DisplayName | Tee-Object -Varia
     Export-Csv -NoTypeInformation -Path $log
 $report | Format-Table -AutoSize
 
+$totalApps = $Applist.count
+Write-Host "INFO: `$Applist.count is $totalApps"
+Write-Host "INFO: Apps: '$RegexAppName', Publisher: '$RegexPublisher'"
+
 if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 5){
     foreach ($a in $Applist){
         'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
@@ -114,14 +118,15 @@ if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.co
             }
         }
     }
+    Start-Sleep -Seconds 10 -Verbose
+    Get-InstalledApps @splat | Sort-Object -Property DisplayName |
+        Where-Object {$_.DisplayName -notmatch '^[\.\s\*\+]*$'} |
+        Select-Object -Property InstallDate, DisplayName, Publisher, DisplayVersion, UninstallString, QuietUninstallString |
+        Format-Table -AutoSize
 } elseif (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -gt 5){
     Write-Warning "Search terms to broad to auto uninstall"
     $exit = 3
 }
-
-$totalApps = $Applist.count
-Write-Host "INFO: `$Applist.count is $totalApps"
-Write-Host "INFO: Apps: '$RegexAppName', Publisher: '$RegexPublisher'"
 
 if ($report.count -ge 83){
     Write-Host "Log Path: $log"
