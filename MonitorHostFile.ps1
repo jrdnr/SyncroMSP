@@ -1,5 +1,5 @@
 # Set up $env: vars for Syncro Module
-if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+if($env:SyncroModule -match '^\s*$'){
     $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
     $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
     $env:RepairTechKabutoApiUrl     = 'https://rmm.syncromsp.com'
@@ -12,7 +12,7 @@ if (Test-Path -Path $env:SyncroModule) {
     Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
 }
 
-$hosts = Get-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" | Where-Object {$_ -notlike '#*' -and ![string]::IsNullOrWhiteSpace($_)} | Out-String
+$hosts = Get-Content -Path "$env:SystemRoot\System32\drivers\etc\hosts" | Where-Object {$_ -notlike '#*' -and ($_ -notmatch '^\s*$')} | Out-String
 $diff = try {
     Compare-Object -ReferenceObject $HostsFile -DifferenceObject $hosts -ErrorAction SilentlyContinue
 }
@@ -23,7 +23,7 @@ catch {
 "Current Hosts Values"
 $hosts
 
-if ([string]::IsNullOrWhiteSpace($HostsFile) -and ![string]::IsNullOrWhiteSpace($hosts)){
+if (($HostsFile -match '^\s*$') -and ($hosts -notmatch '^\s*$')){
     Set-Asset-Field -Name HostsFile -Value $hosts
 } elseif ($null -ne $diff) {
     $diff

@@ -141,7 +141,7 @@ Function Get-AVStatus {
                 @{Name = "Path"; Expression = { $_.pathToSignedProductExe } },
                 Timestamp,
                 @{Name = "Computername"; Expression = {
-                    if([string]::IsNullOrWhiteSpace($_.PSComputername)){$env:COMPUTERNAME}else{$_.PSComputername.toUpper()}
+                    if($_.PSComputername -match '^\s*$'){$env:COMPUTERNAME}else{$_.PSComputername.toUpper()}
                 } }
             }
 
@@ -162,13 +162,13 @@ function Import-SyncroModule {
     )
 
     # Set up $env: vars for Syncro Module
-    if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+    if($env:SyncroModule -match '^\s*$'){
         $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
         $env:RepairTechFilePusherPath  = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
         $env:RepairTechKabutoApiUrl    = 'https://rmm.syncromsp.com'
         $env:RepairTechSyncroApiUrl    = 'https://{subdomain}.syncroapi.com'
         $env:RepairTechSyncroSubDomain = $SyncroRegKey.shop_subdomain
-        $env:RepairTechUUID            = if([string]::IsNullOrWhiteSpace($UUID)){ $SyncroRegKey.uuid } else {$UUID}
+        $env:RepairTechUUID            = if($UUID -match '^\s*$'){ $SyncroRegKey.uuid } else {$UUID}
         $env:SyncroModule              = "$env:ProgramData\Syncro\bin\module.psm1"
     }
     if ((Test-Path -Path $env:SyncroModule) -and ($PSVersionTable.PSVersion -ge [system.version]'4.0')) {
@@ -184,7 +184,7 @@ Get-AVStatus -All | Tee-Object -Variable InstalledAV
 if ($env:SyncroModule -and $null -ne $InstalledAV){
     Import-SyncroModule
     $AvEnabled = $InstalledAV | Where-Object {$_.Enabled -eq $true}
-    if (![string]::IsNullOrWhiteSpace($AlertIfEnabledAV) -and $AvEnabled.Displayname -match $AlertIfEnabledAV){
+    if (($AlertIfEnabledAV -notmatch '^\s*$') -and $AvEnabled.Displayname -match $AlertIfEnabledAV){
         # Remove `r from string so Syncro doesn't Barf
         $body = ($AvEnabled | Out-String) -replace "`r",""
         Rmm-Alert -Category 'Enabled_AV_Error' -Body $body
@@ -192,7 +192,7 @@ if ($env:SyncroModule -and $null -ne $InstalledAV){
     $enabledAVBody = $AvEnabled.Displayname -join ','
     Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody
 
-    $date      = if([string]::IsNullOrWhiteSpace($a.Timestamp)){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
+    $date      = if($a.Timestamp -match '^\s*$'){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
     $AllAVBody = @('Displayname,Enabled,Date')
     $AllAVBody += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
     $AllAVBody = ($AllAVBody | Out-String) -replace "`r",""

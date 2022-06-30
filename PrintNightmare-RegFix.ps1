@@ -1,5 +1,5 @@
 # Set up $env: vars for Syncro Module
-if([string]::IsNullOrWhiteSpace($env:SyncroModule)){
+if($env:SyncroModule -match '^\s*$'){
     $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
     $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
     $env:RepairTechKabutoApiUrl     = 'https://rmm.syncromsp.com'
