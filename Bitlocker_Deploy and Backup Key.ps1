@@ -91,6 +91,7 @@ try {
         Write-Host "A recovery password is already defined, skipping creation."
     }
 
+    "Sleeping 30 Seconds"
     Start-Sleep -Seconds 30
 
     Save-BitlockerRecoveryPasswords -SyncroBL $SyncroBL
