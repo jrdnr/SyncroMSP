@@ -99,7 +99,6 @@ $report | Format-Table -AutoSize
 
 $totalApps = $Applist.count
 Write-Host "INFO: `$Applist.count is $totalApps"
-Write-Host "INFO: Apps: '$RegexAppName', Publisher: '$RegexPublisher'"
 
 try {
     [int]$MaxNumberApps = [int]$MaxNumberApps
