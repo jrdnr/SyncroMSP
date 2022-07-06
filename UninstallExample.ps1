@@ -1,5 +1,13 @@
 #Requires -RunAsAdministrator
 
+'============ Syncro Inserted Code ============'
+foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction Stop)){
+    if ($line -eq '#Requires -RunAsAdministrator') {break}
+    $line
+}
+'============== END Syncro Code ==============='
+''
+
 #Example application uninstall, will attempt to find apps installed in system locations as well as User hives.
 # Not all apps record uninstall info in these locations so may not work for all apps.
 
@@ -8,6 +16,7 @@
 
 # $RegexAppName = 'Wave Browser'
 # $RegexPublisher = 'Piriform'
+# $MaxNumberApps
 $SilentUninstallFlag = '/SILENT'
 $exit = 0
 $log = "$env:TEMP\installedApps.csv"
@@ -92,7 +101,15 @@ $totalApps = $Applist.count
 Write-Host "INFO: `$Applist.count is $totalApps"
 Write-Host "INFO: Apps: '$RegexAppName', Publisher: '$RegexPublisher'"
 
-if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt 5){
+try {
+    [int]$MaxNumberApps = [int]$MaxNumberApps
+    if ($MaxNumberApps -lt 1){$MaxNumberApps = 5}
+}
+catch {
+    $MaxNumberApps = 5
+}
+
+if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt $MaxNumberApps){
     foreach ($a in $Applist){
         'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
         if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
