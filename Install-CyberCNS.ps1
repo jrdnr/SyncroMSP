@@ -1,19 +1,22 @@
 # Required Variables
-# $InstType (recomend Dropdown), Values: 'Probe','LightWeight','Scan','auto'
-# $ClientID (recomend Platform variable set to customer custom field)
-# $ClientSecret (recomend Platform variable set to customer custom field)
-# $Uninstall (recomend Dropdown), Values: 'True', 'False'
+#   $InstType (recomend Dropdown), Values: 'Probe','LightWeight','Scan','auto'
+#   $ClientID (recomend Platform variable set to customer custom field)
+#   $ClientSecret (recomend Platform variable set to customer custom field)
+#   $Uninstall (recomend Dropdown), Values: 'True', 'False'
+#   $environment = Should be your environment/domain for -e in installer
+$Url = 'portaluseast2.mycybercns.com'
+
 #
 # $Source OR Required File (use to specify download link or save cybercnsagent.exe to C:\Windows\Temp)
 $installTypes = @('Probe','LightWeight','Scan','auto')
 if ($installTypes -notcontains $InstType){
-    throw "`$InstType must equal one of ($($installTypes -join ', '))"
+    Write-Warning "`$InstType must equal one of ($($installTypes -join ', '))"
     exit 1
 }
 
 if ($ClientID -match '^\s*$' -or $ClientSecret -match '^\s*$'){
-    throw '$ClientID and $ClientSecret are both required to install the agent.'
-    exit 1
+    Write-Warning '$ClientID and $ClientSecret are both required to install the agent.'
+    exit 2
 }
 
 if ($Uninstall -eq 'True' -and (Test-Path -Path 'C:\Program Files (x86)\CyberCNSAgentV2\uninstall.bat')){
@@ -67,5 +70,5 @@ switch -Regex ($Source) {
     }
 }
 
-"Running: Start-Process $destination -ArgumentList `"-c $ClientID -a $ClientID -s `$ClientSecret -b eberlysystemsv2.mycybercns.com -i $InstType`" -NoNewWindow"
-Start-Process $destination -ArgumentList "-c $ClientID -a $ClientID -s $ClientSecret -b eberlysystemsv2.mycybercns.com -i $InstType" -NoNewWindow
+"Running: Start-Process $destination -ArgumentList `"-c $ClientID -a $ClientID -s `$ClientSecret -b $Url -e $environment -i $InstType`" -NoNewWindow"
+Start-Process $destination -ArgumentList "-c $ClientID -a $ClientID -s $ClientSecret -b $Url -e $environment -i $InstType" -NoNewWindow
