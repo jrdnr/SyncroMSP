@@ -1,8 +1,7 @@
-#Requires -RunAsAdministrator
-
+<#- Start of Script -#>
 '============ Syncro Inserted Code ============'
 foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction Stop)){
-    if ($line -eq '#Requires -RunAsAdministrator') {break}
+    if ($line -eq '<#- Start of Script -#>') {break}
     $line
 }
 '============== END Syncro Code ==============='

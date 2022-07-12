@@ -1,3 +1,4 @@
+<#- Start of Script -#>
 # Required Variables
 #   $InstType (recomend Dropdown), Values: 'Probe','LightWeight','Scan','auto'
 #   $ClientID (recomend Platform variable set to customer custom field)
@@ -6,12 +7,21 @@
 #   $environment = Should be your environment/domain for -e in installer
 $Url = 'portaluseast2.mycybercns.com'
 
+'============ Syncro Inserted Code ============'
+foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction Stop)){
+    if ($line -eq '<#- Start of Script -#>') {break}
+    $line
+}
+'============== END Syncro Code ==============='
+''
+
 #
 # $Source OR Required File (use to specify download link or save cybercnsagent.exe to C:\Windows\Temp)
 $installTypes = @('Probe','LightWeight','Scan','auto')
 if ($installTypes -notcontains $InstType){
     Write-Warning "`$InstType must equal one of ($($installTypes -join ', '))"
-    exit 1
+    "Setting InstType to auto"
+    $InstType = 'auto'
 }
 
 if ($ClientID -match '^\s*$' -or $ClientSecret -match '^\s*$'){
