@@ -37,15 +37,17 @@ if ($Uninstall -eq 'True' -and (Test-Path -Path 'C:\Program Files (x86)\CyberCNS
 
 $CyberCNSService = Get-Service -Name CyberCNSAgent* -ErrorAction SilentlyContinue
 
-if ($null -ne $CyberCNSService){
-    $i = 0
-    while ($CyberCNSService.Status -ne 'Running' -and $i -lt 7) {
-        Start-Service -InputObject $CyberCNSService
+if ($null -ne $CyberCNSService -and $CyberCNSService.Status -ne 'Running'){
+    try {
+        Start-Service -InputObject $CyberCNSService -ErrorAction Stop
         Start-Sleep -Seconds 3
-        $CyberCNSService = Get-Service -Name CyberCNSAgent* -ErrorAction SilentlyContinue
+        if (Get-Service -Name CyberCNSAgent* -ErrorAction SilentlyContinue -eq 'Running'){
+            exit 0
+        }
+
     }
-    if ($CyberCNSService.Status -eq 'Running'){
-        exit 0
+    catch {
+        'Could not start service, Proceed to install'
     }
 }
 
