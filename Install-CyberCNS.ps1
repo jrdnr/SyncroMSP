@@ -49,6 +49,12 @@ if ($null -ne $CyberCNSService -and $CyberCNSService.Status -ne 'Running'){
     catch {
         'Could not start service, Proceed to install'
     }
+} elseif ($env:SyncroModule) {
+    <#
+    Import-Module $env:SyncroModule -WarningAction SilentlyContinue
+    # the Issue with closing this is that "PS Monitor" is all Process monitors.
+    Close-Rmm-Alert -Category "Ps Monitor"
+    #>
 }
 
 if ($InstType -eq 'auto'){
