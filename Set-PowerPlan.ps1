@@ -65,7 +65,7 @@ function New-PowerPlan {
                 $PwrGuid = '8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c'
             }
         }
-        $regex = '[{]?[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?'
+        #$regex = '[{]?[0-9a-fA-F]{8}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{12}[}]?'
     }
 
     process {
