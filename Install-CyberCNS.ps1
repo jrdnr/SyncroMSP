@@ -24,7 +24,10 @@ if ($installTypes -notcontains $InstType){
     $InstType = 'auto'
 }
 
-if ($ClientID -match '^\s*$' -or $ClientSecret -match '^\s*$'){
+if ("$ClientID$ClientSecret" -match 'Skip'){
+    "Skip Install"
+    exit
+} elseif ($ClientID -match '^\s*$' -or $ClientSecret -match '^\s*$'){
     Write-Warning '$ClientID and $ClientSecret are both required to install the agent.'
     exit 2
 }
