@@ -46,7 +46,7 @@ function Get-InstalledApps {
             $unload = $true
         }
         $UPath = Join-Path -Path $UserHive -ChildPath 'Software\Microsoft\Windows\CurrentVersion\Uninstall'
-        if (Test-Path -Path $UPath){
+        if ((Test-Path -Path $UPath) -and -not $InstLocation.ContainsKey($UPath)){
             $InstLocation.Add($UPath,$unload)
         }
     }
