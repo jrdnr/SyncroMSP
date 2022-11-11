@@ -3,35 +3,35 @@ Required Syncro Field: Monitors, Type: Text Area
 #>
 
 $connections = try {
-    Get-CimInstance -Namespace root/wmi -ClassName WmiMonitorConnectionParams -ErrorAction stop |
+    Get-CimInstance -Namespace 'root/wmi' -ClassName 'WmiMonitorConnectionParams' -ErrorAction stop |
         Group-Object -AsHashTable -Property InstanceName
 }
 catch {
-    Get-WmiObject -Namespace root/wmi -ClassName WmiMonitorConnectionParams |
+    Get-WmiObject -Namespace 'root/wmi' -ClassName 'WmiMonitorConnectionParams' |
         Group-Object -AsHashTable -Property InstanceName
 }
 
 $VideoOutput = @{
-    '-2' = "UNINITIALIZED"
-    '-1' = "OTHER"
-    '0'  = "VGA_HD15"
-    '1'  = "SVIDEO"
-    '2'  = "SCOMPOSITE_VIDEO"
-    '3'  = "COMPONENT_VIDEO"
-    '4'  = "DVI"
-    '5'  = "HDMI"
-    '6'  = "LVDS"
-    '7'  = "UNKNOWN"
-    '8'  = "D_JPN"
-    '9'  = "SDI"
-    '10' = "DP_EXTERNAL"
-    '11' = "DP_EMBEDDED"
-    '12' = "UDI_EXTERNAL"
-    '13' = "UDI_EMBEDDED"
-    '14' = "SDTVDONGLE"
-    '15' = "MIRACAST"
-    '16' = "INDIRECT_WIRED"
-    '2147483648' = "BUILT_IN"
+    '-2' = 'UNINITIALIZED'
+    '-1' = 'OTHER'
+    '0'  = 'VGA_HD15'
+    '1'  = 'SVIDEO'
+    '2'  = 'SCOMPOSITE_VIDEO'
+    '3'  = 'COMPONENT_VIDEO'
+    '4'  = 'DVI'
+    '5'  = 'HDMI'
+    '6'  = 'LVDS'
+    '7'  = 'UNKNOWN'
+    '8'  = 'D_JPN'
+    '9'  = 'SDI'
+    '10' = 'DP_EXTERNAL'
+    '11' = 'DP_EMBEDDED'
+    '12' = 'UDI_EXTERNAL'
+    '13' = 'UDI_EMBEDDED'
+    '14' = 'SDTVDONGLE'
+    '15' = 'MIRACAST'
+    '16' = 'INDIRECT_WIRED'
+    '2147483648' = 'BUILT_IN'
 }
 
 $ManufacturerHt = @{
@@ -61,7 +61,12 @@ $ManufacturerHt = @{
 }
 
 #Grabs the Monitor objects from WMI
-$Monitors = Get-WmiObject -Namespace "root\WMI" -Class "WMIMonitorID" -ErrorAction SilentlyContinue
+$Monitors = try {
+    Get-CimInstance -Namespace 'root\WMI' -ClassName 'WMIMonitorID' -ErrorAction Stop
+}
+catch {
+    Get-WmiObject -Namespace 'root\WMI' -Class 'WMIMonitorID' -ErrorAction SilentlyContinue
+}
 
 #Takes each monitor object found and runs the following code:
 [array]$Monitor_Array = ForEach ($Monitor in $Monitors) {
@@ -106,7 +111,7 @@ if ($null -ne $Monitor_Array){
     $Note = ($Monitor_Array | ConvertTo-Csv -NoTypeInformation | Out-String).Replace('"','') -replace "`r",""
 
     Import-Module $env:SyncroModule
-    Set-Asset-Field -Name "Monitors" -Value $Note
+    Set-Asset-Field -Name 'Monitors' -Value $Note
 } else {
-    "No Monitors Detected"
+    'No Monitors Detected'
 }
