@@ -33,7 +33,10 @@ if($env:SyncroModule -match '^\s*$'){
     $env:RepairTechUUID             = $SyncroRegKey.uuid
     $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
 }
-if (Test-Path -Path $env:SyncroModule) {
+if ((Test-Path -Path $env:SyncroModule) -and ($PSVersionTable.PSVersion -ge [system.version]'4.0')) {
     Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
+} else {
+    if ($PSVersionTable.PSVersion -lt [system.version]'4.0'){Write-Warning "$($PSVersionTable.PSVersion) is not compatible with SyncroModule"}
+    [Environment]::SetEnvironmentVariable('SyncroModule',$null)
 }
 #>
