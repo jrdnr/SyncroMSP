@@ -2,7 +2,7 @@ function Get-SyncroVars {
     [CmdletBinding()]
     param (
         $File = $MyInvocation.MyCommand.Path,
-        [string]$BreakString = '<#- Start of Script -#>',
+        [string]$BreakString = '#- Start of Script -#',
         [switch]$WrapOutput
     )
 
@@ -39,7 +39,7 @@ function Get-SyncroVars {
 
 <# Non Function Version
 $SyncroVars = foreach ($line in (Get-Content -Path $MyInvocation.MyCommand.Path -ErrorAction SilentlyContinue)){
-    if ($line -like $BreakString) {
+    if ($line -like '#- Start of Script -#') {
         break
     } else {
         # Mask Guid in log
@@ -47,7 +47,6 @@ $SyncroVars = foreach ($line in (Get-Content -Path $MyInvocation.MyCommand.Path 
         if ($l -lt $line.Length){$l = $line.Length}
     }
 }
-
 if ($SyncroVars.Count -ge 1){
     $HeadTxt = ' Start Head Content '
     $HeadPad = ('='* [math]::Ceiling(($l - $HeadTxt.Length) / 2))
