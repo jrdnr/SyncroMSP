@@ -173,9 +173,10 @@ function Import-SyncroModule {
     }
     if ((Test-Path -Path $env:SyncroModule) -and ($PSVersionTable.PSVersion -ge [system.version]'4.0')) {
         Import-Module -Name $env:SyncroModule -WarningAction SilentlyContinue
-    } else {
-        if ($PSVersionTable.PSVersion -lt [system.version]'4.0'){Write-Warning "$($PSVersionTable.PSVersion) is not compatible with SyncroModule"}
+    } elseif ($PSVersionTable.PSVersion.Major -lt 4) {
+        Write-Warning "$($PSVersionTable.PSVersion) is not compatible with SyncroModule"
         [Environment]::SetEnvironmentVariable('SyncroModule',$null)
+        $false
     }
 }
 
