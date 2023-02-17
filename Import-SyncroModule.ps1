@@ -4,6 +4,11 @@ function Import-SyncroModule {
         $UUID
     )
 
+    # Ensure TLS -ge 1.2
+    if ([Net.ServicePointManager]::SecurityProtocol -lt [Net.SecurityProtocolType]::Tls12){
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    }
+
     # Set up $env: vars for Syncro Module
     if($env:SyncroModule -match '^\s*$'){
         $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
@@ -24,6 +29,10 @@ function Import-SyncroModule {
 }
 
 <# non Function version
+# Ensure TLS -ge 1.2
+if ([Net.ServicePointManager]::SecurityProtocol -lt [Net.SecurityProtocolType]::Tls12){
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+}
 # Set up $env: vars for Syncro Module
 if($env:SyncroModule -match '^\s*$'){
     $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
