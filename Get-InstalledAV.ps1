@@ -13,6 +13,11 @@
     $AllAV = "All AV"         #Type: "Text Area"
 #       Description: Multi line output CSV for all detected AVs "DisplayName,Enabled,Date"
 
+    # Ensure TLS -ge 1.2
+    if ([Net.ServicePointManager]::SecurityProtocol -lt [Net.SecurityProtocolType]::Tls12){
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    }
+
 Function Get-AVStatus {
 
     <#
@@ -180,7 +185,72 @@ function Import-SyncroModule {
     }
 }
 
+function Get-InstalledApps {
+    param (
+        [string]$AppName,
+        [string]$Publisher,
+        [switch]$or
+    )
+
+    if ((Get-PSDrive | Where-Object {$_.Name -eq 'HKU'}).count -lt 1){
+        New-PSDrive -Name HKU -PSProvider Registry -Root Registry::HKEY_USERS | Out-Null
+    }
+    [array]$users = Get-WMIObject -class Win32_UserProfile | Sort-Object -Property LastUseTime |
+        Where-Object { $_.LocalPath -like 'c:\user*' }
+    $users += [PSCustomObject]@{LocalPath = 'c:\users\.DEFAULT'; SID = '.DEFAULT'}
+
+    $InstLocation = @{}
+    foreach ($u in $Users) {
+        $hkuPath = "HKU\$($u.SID)"
+        $ntuserdat = Join-Path -Path $u.LocalPath -ChildPath NTUSER.DAT
+        $UserHive = "HKU:\$($u.SID)"
+        $unload = $false
+
+        if (!(Test-Path -Path $UserHive)){
+            reg load $hkuPath $ntuserdat 2>&1 | Out-Null
+            $unload = $true
+        }
+        $UPath = Join-Path -Path $UserHive -ChildPath 'Software\Microsoft\Windows\CurrentVersion\Uninstall'
+        if ((Test-Path -Path $UPath) -and -not $InstLocation.ContainsKey($UPath)){
+            $InstLocation.Add($UPath,$unload)
+        }
+    }
+
+    $InstLocation += @{
+        "HKLM:\software\microsoft\windows\currentversion\uninstall" = $false
+        "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\" = $false
+    }
+    $AllApps = get-childitem $InstLocation.Keys.split() | ForEach-Object { Get-ItemProperty $_.PSPath }
+        #| Select-Object DisplayVersion,InstallDate,ModifyPath,Publisher,UninstallString,Language,DisplayName
+
+    foreach ($a in $AllApps){
+        $test = @(
+            ($a.DisplayName -match $AppName),
+            ($a.Publisher -match $Publisher)
+        )
+        if ($true -ne $or -and $test -notcontains $false){
+            $a
+        } elseif ($true -eq $or -and $test -contains $true) {
+            $a
+        }
+    }
+
+    foreach ($k in $InstLocation.Keys){
+        if($InstLocation.$k -eq $true){
+            reg unload $hkuPath 2>&1 | Out-Null
+        }
+    }
+}
+
 Get-AVStatus -All | Tee-Object -Variable InstalledAV
+
+if ($null -eq $InstalledAV) {
+    $Cylance = Get-InstalledApps -AppName 'Cylance PROTECT'
+    [array]$InstalledAV += [PSCustomObject]@{
+        Displayname = $Cylance.DisplayName
+        Enabled = $true
+    }
+}
 
 if ($env:SyncroModule -and $null -ne $InstalledAV){
     Import-SyncroModule
@@ -190,12 +260,20 @@ if ($env:SyncroModule -and $null -ne $InstalledAV){
         $body = ($AvEnabled | Out-String) -replace "`r",""
         Rmm-Alert -Category 'Enabled_AV_Error' -Body $body
     }
-    $enabledAVBody = $AvEnabled.Displayname -join ','
-    Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody
+    try {
+        $enabledAVBody = $AvEnabled.Displayname -join ','
+        Set-Asset-Field -Name $EnabledAV -Value $enabledAVBody -ErrorAction Stop
 
-    $date      = if($a.Timestamp -match '^\s*$'){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
-    $AllAVBody = @('Displayname,Enabled,Date')
-    $AllAVBody += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
-    $AllAVBody = ($AllAVBody | Out-String) -replace "`r",""
-    Set-Asset-Field -Name $AllAV -Value $AllAVBody
+        $date      = if($a.Timestamp -match '^\s*$'){'Unknown'} else {([datetime]$a.Timestamp).ToString('yyyy/MM/dd')}
+        $AllAVBody = @('Displayname,Enabled,Date')
+        $AllAVBody += foreach ($a in $InstalledAV){'{0},{1},{2}' -f $a.Displayname, $a.Enabled, $date}
+        $AllAVBody = ($AllAVBody | Out-String) -replace "`r",""
+        Set-Asset-Field -Name $AllAV -Value $AllAVBody -ErrorAction Stop
+
+        exit 0
+    }
+    catch {
+        exit 1
+    }
+
 }
