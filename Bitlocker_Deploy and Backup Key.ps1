@@ -15,8 +15,8 @@
   )
 
 # Set the TLS version used by the PowerShell client to TLS 1.2.
-if ([System.Net.ServicePointManager]::SecurityProtocol -lt [System.Net.SecurityProtocolType]::Tls12){
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
+if ([System.Net.ServicePointManager]::SecurityProtocol -lt [System.Net.SecurityProtocolType]::Tls13){
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls13
 }
 
 # Set up $env: vars for Syncro Module
