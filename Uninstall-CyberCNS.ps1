@@ -18,4 +18,4 @@ while ($Uninstall -eq 'True' -and (Test-Path -Path 'C:\Program Files (x86)\Cyber
 }
 
 Get-Process -Name cybercns* | Stop-Process -Force
-Remove-Item -Path 'C:\Program Files (x86)\CyberCNSAgentV2' -Recurse -Force
+Remove-Item -Path 'C:\Program Files (x86)\CyberCNSAgentV2' -Recurse -Force -ErrorAction SilentlyContinue
