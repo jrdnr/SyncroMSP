@@ -21,11 +21,18 @@ function Get-SyncroVars {
             }
         }
 
-        if ($SyncroVars.Count -ge 1 -and $WrapOutput){
+        if ($SyncroVars.Count -ge 1){
+            $padding = {
+                if ($l -gt $HeadTxt.Length){
+                    ('='* [math]::Ceiling(($l - $HeadTxt.Length) / 2))
+                } else {
+                    '='
+                }
+            }
             $HeadTxt = ' Start Head Content '
-            $HeadPad = ('='* [math]::Ceiling(($l - $HeadTxt.Length) / 2))
+            $HeadPad = & $padding
             $FootTxt = ' END Content Block ='
-            $FootPad = ('='* [math]::Ceiling(($l - $FootTxt.Length) / 2))
+            $FootPad = & $padding
 
             '{0}{1}{0}' -f $HeadPad,$HeadTxt
             $SyncroVars
@@ -48,10 +55,17 @@ $SyncroVars = foreach ($line in (Get-Content -Path $MyInvocation.MyCommand.Path 
     }
 }
 if ($SyncroVars.Count -ge 1){
+    $padding = {
+        if ($l -gt $HeadTxt.Length){
+            ('='* [math]::Ceiling(($l - $HeadTxt.Length) / 2))
+        } else {
+            '='
+        }
+    }
     $HeadTxt = ' Start Head Content '
-    $HeadPad = ('='* [math]::Ceiling(($l - $HeadTxt.Length) / 2))
+    $HeadPad = & $padding
     $FootTxt = ' END Content Block ='
-    $FootPad = ('='* [math]::Ceiling(($l - $FootTxt.Length) / 2))
+    $FootPad = & $padding
 
     '{0}{1}{0}' -f $HeadPad,$HeadTxt
     $SyncroVars
