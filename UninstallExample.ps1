@@ -79,10 +79,21 @@ function Get-InstalledApps {
 
 $splat = @{}
 if ($RegexAppName -notmatch '^\s*$'){
-    $splat.Add('AppName',$RegexAppName)
+    $splat.Add('AppName',$RegexAppName.Trim('|'))
+    try {
+        $rAppN = ($RegexAppName -replace '\s','|').Trim('|')
+        $chocoApps = choco list -lo | ForEach-Object {($_ -split '\s')[0]} | Where-Object {$_ -match $rAppN}
+        if ($chocoApps){
+            Write-Warning "Matching Choco Apps: $($chocoApps -join ',')"
+            $exit = 1
+        }
+    }
+    catch {
+        # Choco not installed
+    }
 }
 if ($RegexPublisher -notmatch '^\s*$'){
-    $splat.Add('Publisher',$RegexPublisher)
+    $splat.Add('Publisher',$RegexPublisher.Trim('|'))
 }
 if ($or -eq 'True'){
     $splat.Add('or',$true)
@@ -134,10 +145,16 @@ if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.co
         }
     }
     Start-Sleep -Seconds 10 -Verbose
-    Get-InstalledApps @splat | Sort-Object -Property DisplayName |
+    $InstalledApps = Get-InstalledApps @splat | Sort-Object -Property DisplayName |
         Where-Object {$_.DisplayName -notmatch '^[\.\s\*\+]*$'} |
-        Select-Object -Property InstallDate, DisplayName, Publisher, DisplayVersion, UninstallString, QuietUninstallString |
-        Format-Table -AutoSize
+        Select-Object -Property InstallDate, DisplayName, Publisher, DisplayVersion, UninstallString, QuietUninstallString
+
+    if ($null -ne $InstalledApps){
+        if ($exit -lt 1){
+            $exit = 1
+        }
+        $InstalledApps | Format-Table -AutoSize
+    }
 } elseif (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -gt 5){
     Write-Warning "Search terms to broad to auto uninstall"
     $exit = 3
