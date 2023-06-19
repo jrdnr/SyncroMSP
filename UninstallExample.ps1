@@ -89,8 +89,8 @@ if ($or -eq 'True'){
 }
 
 $ht = @{}
-Get-InstalledApps @splat | Sort-Object -Property DisplayName | Tee-Object -Variable Applist |
-    Where-Object {$_.DisplayName -notmatch '^[\.\s\*\+]*$' -and -not $ht.ContainsKey($_.DisplayName) } |
+[array]$Applist = Get-InstalledApps @splat | Sort-Object -Property DisplayName
+$Applist | Where-Object {$_.DisplayName -notmatch '^[\.\s\*\+]*$' -and -not $ht.ContainsKey($_.DisplayName) } |
     ForEach-Object {$ht.Add($_.DisplayName,$_.Publisher), $_} |
     Select-Object -Property InstallDate, DisplayName, Publisher, DisplayVersion, UninstallString, QuietUninstallString -OutVariable report |
     Export-Csv -NoTypeInformation -Path $log
