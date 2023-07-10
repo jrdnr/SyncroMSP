@@ -107,7 +107,7 @@ catch {
     $MaxNumberApps = 5
 }
 
-if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -lt $MaxNumberApps){
+if (($RegexAppName + $RegexPublisher) -notmatch '^[\.\s\*\+]*$' -and $Applist.count -le $MaxNumberApps){
     foreach ($a in $Applist){
         'Uninstalling "{0}" by "{1}"' -f $a.DisplayName, $a.Publisher
         if($a.QuietUninstallString -match '"(.*)"\s(/.*)'){
