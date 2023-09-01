@@ -7,7 +7,7 @@ function Get-SyncroVars {
     )
 
     begin {
-        [regex]$GuidRx = '([0-9A-F]{3})[0-9A-F]{5}-(?:[0-9A-F]{4}-){3}[0-9A-F]{8}([0-9A-F]{4})'
+        [regex]$GuidRx = '([0-9a-fA-F]{3})[0-9a-fA-F]{5}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{8}([0-9a-fA-F]{4})'
     }
 
     process {
@@ -16,7 +16,7 @@ function Get-SyncroVars {
                 break
             } else {
                 # Mask Guid in log
-                $line -replace $GuidRx, '$1*****-****-****-****-********$2'
+                $line -replace $GuidRx, '$1$3*****-****-****-****-********$2$4'
                 if ($l -lt $line.Length){$l = $line.Length}
             }
         }
@@ -50,7 +50,7 @@ $SyncroVars = foreach ($line in (Get-Content -Path $MyInvocation.MyCommand.Path 
         break
     } else {
         # Mask Guid in log
-        $line -replace '([0-9A-F]{3})[0-9A-F]{5}-(?:[0-9A-F]{4}-){3}[0-9A-F]{8}([0-9A-F]{4})', '$1*****-****-****-****-********$2'
+        $line -replace '([0-9a-fA-F]{3})[0-9a-fA-F]{5}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{8}([0-9a-fA-F]{4})|^(\w{3})\w{23,}(\w{4})$', '$1$3*****-****-****-****-********$2$4'
         if ($l -lt $line.Length){$l = $line.Length}
     }
 }
