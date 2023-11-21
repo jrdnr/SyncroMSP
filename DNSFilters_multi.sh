@@ -6,11 +6,11 @@ websites=("google.com" "youtube.com" "facebook.com" "baidu.com" "wikipedia.org" 
 # Associative array for resolver names and IP addresses
 declare -A resolvers=(
     ["Cloudflare"]="1.1.1.1"
+    ["Google"]="8.8.8.8"
     ["Cloudflare-Filtered"]="1.1.1.2"
     ["CleanBrowsing"]="185.228.169.9"
     ["dns0"]="193.110.81.0"
     ["Quad9"]="9.9.9.9"
-    ["FlashStart"]="185.236.104.104"
 )
 
 # Function to perform DNS lookup and measure time in milliseconds
@@ -53,16 +53,16 @@ fqdn_list1=$(echo "$url_list1" | grep -oP '(?<=://)[^:/]+(?=\/|$)')
 combined_fqdn_list=$(echo -e "$fqdn_list1\n$url_list2" | grep -vE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
 
 # IP addresses of the nameservers used for lookups
-# Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9, FlashStart
-nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9" "185.236.104.104")
+# Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9
+nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9")
 
 dnsLookup() {
     # Domain passed as a command-line argument
     domain="$1"
 
     # IP addresses of the nameservers used for lookups
-    # Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9, FlashStart
-    nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9" "185.236.104.104")
+    # Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9
+    nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9")
 
     ip_1_1_1_1=$(dig "@${nameservers[0]}" +short "$domain" 2>/dev/null | tail -n1)
 
