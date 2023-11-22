@@ -1,7 +1,55 @@
 #!/bin/bash
 
-# List of top websites for DNS lookups
-websites=("google.com" "youtube.com" "facebook.com" "baidu.com" "wikipedia.org" "reddit.com" "yahoo.com" "amazon.com" "twitter.com" "instagram.com" "linkedin.com" "netflix.com" "stackoverflow.com" "microsoft.com" "ebay.com")
+# List of websites for DNS lookups
+websites=(
+  "adobe.com"
+  "amazon.com"
+  "apple.com"
+  "att.com"
+  "bankofamerica.com"
+  "bbc.com"
+  "baidu.com"
+  "chase.com"
+  "costco.com"
+  "cnn.com"
+  "dropbox.com"
+  "ebay.com"
+  "espn.com"
+  "facebook.com"
+  "google.com"
+  "groupon.com"
+  "homedepot.com"
+  "hulu.com"
+  "imdb.com"
+  "instagram.com"
+  "linkedin.com"
+  "microsoft.com"
+  "netflix.com"
+  "nike.com"
+  "npr.org"
+  "nytimes.com"
+  "paypal.com"
+  "pinterest.com"
+  "reddit.com"
+  "snapchat.com"
+  "spotify.com"
+  "stackoverflow.com"
+  "starbucks.com"
+  "target.com"
+  "tumblr.com"
+  "twitter.com"
+  "uber.com"
+  "usbank.com"
+  "verizon.com"
+  "walmart.com"
+  "weather.com"
+  "wellsfargo.com"
+  "whatsapp.com"
+  "wikipedia.org"
+  "yahoo.com"
+  "youtube.com"
+  "zillow.com"
+)
 
 # Associative array for resolver names and IP addresses
 declare -A resolvers=(
@@ -19,7 +67,9 @@ benchmark_lookup() {
     local resolver_ip="${resolvers[$resolver]}"
     local total_time=0
 
-    echo "Benchmarking lookup using resolver $resolver ($resolver_ip):"
+    echo -n "Testing $resolver: "
+
+    li=$((${#websites[@]} - 1))
 
     for website in "${websites[@]}"; do
         start_time=$(date +%s%N)  # Start time in nanoseconds
@@ -29,11 +79,16 @@ benchmark_lookup() {
         # Calculate elapsed time in milliseconds and add to total time
         elapsed_time=$(( (end_time - start_time) / 1000000 ))
         total_time=$((total_time + elapsed_time))
+        if [ "$website" != "${websites[$li]}" ]; then
+            echo -n "$elapsed_time,"
+        else
+            echo "$elapsed_time"
+        fi
     done
 
     # Calculate and print average lookup time in milliseconds
     average_time=$((total_time / ${#websites[@]}))
-    echo "Average lookup time: ${average_time}ms"
+    echo "($resolver_ip): ${average_time}ms"
     echo
 }
 
