@@ -8,7 +8,6 @@ websites=(
   "att.com"
   "bankofamerica.com"
   "bbc.com"
-  "baidu.com"
   "chase.com"
   "costco.com"
   "cnn.com"
@@ -19,36 +18,34 @@ websites=(
   "google.com"
   "groupon.com"
   "homedepot.com"
-  "hulu.com"
   "imdb.com"
-  "instagram.com"
   "linkedin.com"
   "microsoft.com"
   "netflix.com"
-  "nike.com"
-  "npr.org"
-  "nytimes.com"
-  "paypal.com"
-  "pinterest.com"
-  "reddit.com"
-  "snapchat.com"
-  "spotify.com"
-  "stackoverflow.com"
-  "starbucks.com"
-  "target.com"
-  "tumblr.com"
-  "twitter.com"
-  "uber.com"
-  "usbank.com"
-  "verizon.com"
-  "walmart.com"
-  "weather.com"
-  "wellsfargo.com"
-  "whatsapp.com"
-  "wikipedia.org"
-  "yahoo.com"
-  "youtube.com"
-  "zillow.com"
+#   "nike.com"
+#   "npr.org"
+#   "nytimes.com"
+#   "paypal.com"
+#   "pinterest.com"
+#   "reddit.com"
+#   "snapchat.com"
+#   "spotify.com"
+#   "stackoverflow.com"
+#   "starbucks.com"
+#   "target.com"
+#   "tumblr.com"
+#   "twitter.com"
+#   "uber.com"
+#   "usbank.com"
+#   "verizon.com"
+#   "walmart.com"
+#   "weather.com"
+#   "wellsfargo.com"
+#   "whatsapp.com"
+#   "wikipedia.org"
+#   "yahoo.com"
+#   "youtube.com"
+#   "zillow.com"
 )
 
 # Associative array for resolver names and IP addresses
@@ -92,9 +89,11 @@ benchmark_lookup() {
     echo
 }
 
+echo "Benchmarking DNS Server Respons times" > dnsBench.csv
+
 # Perform DNS lookups for each resolver for all websites
 for resolver in "${!resolvers[@]}"; do
-    benchmark_lookup "$resolver"
+    benchmark_lookup "$resolver" >> dnsBench.csv
 done
 
 # Download URL lists
@@ -111,6 +110,23 @@ combined_fqdn_list=$(echo -e "$fqdn_list1\n$url_list2" | grep -vE '([0-9]{1,3}\.
 # Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9
 nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9")
 
+privdig() {
+    local resolver="$1"
+    local domain="$2"
+    local result=""
+
+    while true; do
+        result=$(dig "@$resolver" +short "$domain" 2>/dev/null | tail -n1)
+        if [ "$result" == *";; communications error"* ]; then
+            sleep 2  # Sleep for 2 seconds if the condition is true
+        else
+            break  # Break out of the loop if the condition is false
+        fi
+    done
+
+    echo "$result"
+}
+
 dnsLookup() {
     # Domain passed as a command-line argument
     domain="$1"
@@ -119,28 +135,29 @@ dnsLookup() {
     # Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9
     nameservers=("1.1.1.1" "1.1.1.2" "185.228.169.9" "193.110.81.0" "9.9.9.9")
 
-    ip_1_1_1_1=$(dig "@${nameservers[0]}" +short "$domain" 2>/dev/null | tail -n1)
+    ip_1_1_1_1=$(privdig "${nameservers[0]}" "$domain")
 
     # Check if the lookup for 1.1.1.1 returned anything
     if [ -n "$ip_1_1_1_1" ] && [ "$ip_1_1_1_1" != '127.0.0.1' ]; then
         # IP address lookup for all nameservers
         ip=()
         for ((i = 1; i < ${#nameservers[@]}; i++)); do
-            # Perform DNS lookup, filter out errors, and handle line breaks
-            ip+=("$(dig "@${nameservers[$i]}" +short "$domain" 2>/dev/null | tail -n1)")
+            # Perform DNS lookup using privdig function
+            ip+=("$(privdig "${nameservers[$i]}" "$domain")")
         done
 
         # Append the results to the CSV file
-        echo "$domain,$ip_1_1_1_1,$(IFS=,; echo "${ip[*]}")" >> dnsBench.csv
+        echo "$domain,$ip_1_1_1_1,$(IFS=,; echo "${ip[*]}")" >> dnsFilterTest.csv
     fi
 }
 
+export -f privdig
 export -f dnsLookup
 
 # Output CSV header to a file
-echo "Domain name,$(IFS=,; echo "${nameservers[*]}")" > dnsBench.csv
+echo "Domain name,$(IFS=,; echo "${nameservers[*]}")" > dnsFilterTest.csv
 
 # Loop through domains and perform DNS lookups in parallel
-(echo "$combined_fqdn_list" | head -n10) | parallel --jobs 8 "dnsLookup {}" > /dev/null
+(echo "$combined_fqdn_list") | parallel --jobs 8 "dnsLookup {}" > /dev/null
 
-echo "Results written to dnsBench.csv
+echo "Results written to dnsFilterTest.csv
