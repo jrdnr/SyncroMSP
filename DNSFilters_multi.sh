@@ -117,7 +117,7 @@ privdig() {
 
     while true; do
         result=$(dig "@$resolver" +short "$domain" 2>/dev/null | tail -n1)
-        if [ "$result" == *";; communications error"* ]; then
+        if [[ "$result" == *"communications error"* ]]; then
             sleep 2  # Sleep for 2 seconds if the condition is true
         else
             break  # Break out of the loop if the condition is false
@@ -130,6 +130,8 @@ privdig() {
 dnsLookup() {
     # Domain passed as a command-line argument
     domain="$1"
+    # Be sure to match the number of IP addresses to the number of filtered servers
+    local ip_regex='^(([0-9]{1,3}\.){3}[0-9]{1,3},){3}([0-9]{1,3}\.){3}[0-9]{1,3}$'
 
     # IP addresses of the nameservers used for lookups
     # Server Order: Cloudflare, Cloudflare-Filtered, CleanBrowsing, dns0, Quad9
@@ -146,8 +148,11 @@ dnsLookup() {
             ip+=("$(privdig "${nameservers[$i]}" "$domain")")
         done
 
-        # Append the results to the CSV file
-        echo "$domain,$ip_1_1_1_1,$(IFS=,; echo "${ip[*]}")" >> dnsFilterTest.csv
+        $ip_string="$(IFS=,; echo "${ip[*]}")"
+        if [[ ! $ip_string =~ $ip_regex ]]; then
+            # Append the results to the CSV file
+            echo "$domain,$ip_1_1_1_1,$(IFS=,; echo "${ip[*]}")" >> dnsFilterTest.csv
+        fi
     fi
 }
 
