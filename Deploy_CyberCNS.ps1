@@ -12,7 +12,7 @@ $Url = 'portaluseast2.mycybercns.com'
 $AgentURI = (Invoke-RestMethod -Method "Get" -URI "https://configuration.mycybercns.com/api/v3/configuration/agentlink?ostype=windows")
 $AgentName = $AgentURI.Split('/')[-1]
 
-'============ Syncro Inserted Code ============'
+'#============ Syncro Inserted Code ============#'
 foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction Stop)){
     if ($line -eq '<#- Start of Script -#>') {
         break
@@ -21,7 +21,7 @@ foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction 
         $line -replace '([0-9a-fA-F]{3})[0-9a-fA-F]{5}-(?:[0-9a-fA-F]{4}-){3}[0-9a-fA-F]{8}([0-9a-fA-F]{4})|^(\w{3})\w{23,}(\w{4})$', '$1$3*****-****-****-****-********$2$4'
     }
 }
-'============== END Syncro Code ==============='
+'#============== END Syncro Code ===============#'
 ''
 
 #

@@ -10,13 +10,13 @@ $date = Get-Date -Format 'yyyy.MM.dd'
 $FullName = Join-Path -Path $workfolder -ChildPath $cliX
 #endregion set Vars
 
-'============ Syncro Inserted Code ============'
+'#============ Syncro Inserted Code ============#'
 # Log all code Syncro incserts before the start of the script
 foreach ($line in (Get-Content -Path  $MyInvocation.MyCommand.Path -ErrorAction Stop)){
     if ($line -eq '<#- Start of Script -#>') {break}
     $line
 }
-'============== END Syncro Code ==============='
+'#============== END Syncro Code ===============#'
 ''
 #Ensure path exists for local log
 $path,$folders = ($workfolder.Split('\'))
