@@ -14,7 +14,7 @@ function Import-SyncroModule {
         $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
         $env:RepairTechFilePusherPath  = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
         $env:RepairTechKabutoApiUrl    = 'https://rmm.syncromsp.com'
-        $env:RepairTechSyncroApiUrl    = 'https://{subdomain}.syncroapi.com'
+        $env:RepairTechSyncroApiUrl    = 'https://{subdomain}.syncromsp.com'
         $env:RepairTechSyncroSubDomain = $SyncroRegKey.shop_subdomain
         $env:RepairTechUUID            = if($UUID -match '^\s*$'){ $SyncroRegKey.uuid } else {$UUID}
         $env:SyncroModule              = "$env:ProgramData\Syncro\bin\module.psm1"
@@ -40,7 +40,7 @@ if($env:SyncroModule -match '^\s*$'){
     $SyncroRegKey = Get-ItemProperty -Path 'HKLM:\SOFTWARE\WOW6432Node\RepairTech\Syncro' -Name uuid, shop_subdomain
     $env:RepairTechFilePusherPath   = 'C:\ProgramData\Syncro\bin\FilePusher.exe'
     $env:RepairTechKabutoApiUrl     = 'https://rmm.syncromsp.com'
-    $env:RepairTechSyncroApiUrl     = 'https://{subdomain}.syncroapi.com'
+    $env:RepairTechSyncroApiUrl     = 'https://{subdomain}.syncromsp.com'
     $env:RepairTechSyncroSubDomain  = $SyncroRegKey.shop_subdomain
     $env:RepairTechUUID             = $SyncroRegKey.uuid
     $env:SyncroModule               = "$env:ProgramData\Syncro\bin\module.psm1"
